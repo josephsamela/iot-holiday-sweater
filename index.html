@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1'>
+        <title>Joe's Holiday Sweater</title>
+    </head>
+    <body>
+        <h1>Joe's Holiday Sweater</h1>
+        <button onclick='input("on")'>Turn On</button>
+        <button onclick='input("off")'>Turn Off</button>
+    </body>
+</html>
+<script>
+    function input(state) {
+        console.log(state)
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", 'input');
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.send("state="+state);
+    }
+</script>
