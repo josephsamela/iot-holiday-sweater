@@ -20,82 +20,659 @@ IPAddress subnet(255, 255, 255, 0);
 DNSServer dns;
 WebServer server(80);
 
+// LIST OF CURRENTLY ACTIVE COLORS
+uint32_t colors[10] = {0,0,0,0,0,0,0,0,0,0};
+
 String form = R"(
 <!DOCTYPE html>
-<html lang='en'>
-    <head>
-        <meta charset='utf-8'>
-        <meta name='viewport' content='width=device-width, initial-scale=1'>
-        <title>Joe's Holiday Sweater</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎄</text></svg>">
-    </head>
-    <style>
-        html {
-            color: #fffeff;
-            background-color: #04012e;
-            font-family: "Comic Sans", "Comic Sans MS", "Chalkboard", "ChalkboardSE-Regular", sans-serif;
-            width: 100%;
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0,user-scalable=0"/>
+    <title>SweaterGPT</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎄</text></svg>">
+    <meta name="theme-color" content="#003e1f">
+</head>
+<style>
+    body {
+        padding: 0px 1em;
+        margin: 0px;
+        background-color: #004733;
+        font-family: 'Trebuchet MS', sans-serif;
+        overflow: hidden;
+        position: relative;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        touch-action: none;
+    }
+
+    h1,p {
+        margin: 0px;
+    }
+
+    p {
+        font-size: 14px;
+    }
+
+    #header {
+        height: 9vh;
+        align-content: center;
+        text-align: center;
+        padding-bottom: 10px;
+        color: white;
+        
+    }
+
+    #chat {
+        width: auto;
+        background-color: white;
+        height: 75vh;
+        overflow-y: scroll;
+        border-radius: 16px;
+    }
+    #chat {
+        .message {
+            margin-bottom: 1em;
+            padding: 14px;
+            border-radius: 24px;
+            max-width: 65%;
+            clear: both;
         }
-        body {
-            margin: 0 auto;
-            padding: 1em;
+        .message.from {
+            float: left;
+            margin-left: 1em;
+            background-color: #a5c1ae;
+        }
+        .message.to {
+            float: right;
+            margin-right: 1em;
+            background-color:  #df8080;
+        }
+        .message.instructions {
+            color: slategrey;
             text-align: center;
-            max-width: 400px;
+            margin: 0px auto;
+            max-width: 75%;
         }
-        p {
-            margin: 0px;
+        .circle {
+        display: inline-block; /* Makes the span behave like a block but flow with text */
+        width: 1em; /* Sets the width of the circle relative to the surrounding text font size */
+        height: 1em; /* Sets the height of the circle */
+        border-radius: 50%; /* Creates the circular shape */
+        margin: 0 0.2em; /* Adds a small margin for spacing around the circle */
+        vertical-align: middle; /* Aligns the circle vertically with the middle of the text */
         }
-        h1 {
-            margin-top: 0px;
-        }
-        button {
-            width: 100%;
-            height: 75px;
-            margin: 1em 0px 1em 0px;
-            font-family: "Comic Sans", "Comic Sans MS", "Chalkboard", "ChalkboardSE-Regular", sans-serif;
-            font-weight: 900;
-            font-size: larger;
-            border-radius: 1em;
-        }
-        button:hover {
-            filter: contrast(50%);
-        }
-        .button-label {
+        .play {
+            background-color: #2B6A4D;
             color: white;
-            mix-blend-mode: difference;
+            justify-content: center;
+            height: 2em;
+            width: 2em;
+            border-radius: 100%;
+            margin-right: 10px;
+            font-size: larger;
+            border: none;
         }
-    </style>
-    <body>
-        <h1>Joe's Holiday Sweater</h1>
-        <h1>🎄 🎁 ❄️ ☃️</h1>
-        <p>It's nearly Christmas and Joe has not finished decorating his tree! Please help Joe light his Christmas Tree! What color should he choose?</p>
-        <br>
-        <button onclick='input("red")' style="background-color:red"><p class="button-label">RED</p></button>
-        <button onclick='input("orange")' style="background-color:orange"><p class="button-label">ORANGE</p></button>
-        <button onclick='input("yellow")' style="background-color:yellow"><p class="button-label">YELLOW</p></button>
-        <button onclick='input("green")' style="background-color:green"><p class="button-label">GREEN</p></button>
-        <button onclick='input("blue")' style="background-color:blue"><p class="button-label">BLUE</p></button>
-        <button onclick='input("indigo")' style="background-color: #4b0082"><p class="button-label">INDIGO</p></button>
-        <button onclick='input("violet")' style="background-color: #7F00FF"><p class="button-label">VIOLET</p></button>
-        <button onclick='input("white")' style="background-color:white"><p class="button-label">WHITE</p></button>
-        <button onclick='input("rainbow")' style="background: linear-gradient(in hsl longer hue 45deg, red 0 0);"><p class="button-label">RAINBOW</p></button>
-        <button onclick='input("candle")' style="background: linear-gradient(black 50%, darkorange 100%);"><p class="button-label">CANDLE</p></button>
-        <button onclick='input("sparkle")' style="background-color: black"><p class="button-label">SPARKLE ✨</p></button>
-        <button onclick='input("christmas")' style="background: linear-gradient( green, red);"><p class="button-label">CHRISTMAS</p></button>
-        <button onclick='input("random")'><p class="button-label">RANDOM</p></button>
-        <h1>🎄 🎁 ❄️ ☃️</h1>
-    </body>
-</html>
+
+    }
+
+    #prompt {
+        height: 10vh;
+        display: flex;
+        align-items: center;
+        padding-top: 10px;
+    }
+    #prompt {
+        input {
+            width: 75%;
+            border-radius: 10em;
+            border: none;
+            font-family: 'Trebuchet MS', sans-serif;
+            padding: 1em;
+            font-size: 16px;
+        }
+        .submit {
+            width: 42px;
+            height: 42px;
+            border-radius: 100%;
+            background-color: #AD080F;
+            margin-left: auto;
+            align-content: center;
+            text-align: center;
+            font-size: 25px;
+            color: white;
+
+            display: grid;
+            justify-content: center;
+            overflow: hidden;
+        }
+    }
+</style>
+<body>
+    <div id="header">
+        <h1><span style="color: green;">Sweater</span><span style="color: #CB0B0A;">GPT</span></h1>
+        <p style="font-size: small;">🎄 The world's <i>first</i> AI holiday sweater 🎄</p>
+    </div>
+    <div id="chat">
+        <p class="message instructions"><b><span style="color: green;">Sweater</span><span style="color: #CB0B0A;">GPT</span></b> uses the latest in-clothing AI technology to generate exciting color schemes from your prompts!<br><br>Type your idea for a color palette.</p>
+    </div>
+    <div id="prompt">
+        <input id="text" type="text" placeholder="Type your idea...">
+        <div class="submit" onclick='message()'>✨</div>
+    </div>
+</body>
 <script>
-    function input(state) {
-        console.log(state)
+    function message() {
+        chat = document.getElementById('chat')
+        text = document.getElementById('text')
+
+        // Don't do anything if there isn't a message
+        if (text.value == "" | text.value == null) {
+            return
+        }
+
+        // If there is, create user message and write to chat.
+        var message = document.createElement("div")
+        message.classList.add('message')
+        message.classList.add('to')
+        message.innerText = text.value
+        chat.appendChild(message)
+
+        // Then get generate response message and write to chat.
+        var response = document.createElement("div")
+        response.classList.add('message')
+        response.classList.add('from')
+
+        colors = false
+        if (text.value.length <= 4) {
+            response.innerText = "I need a little more to work with. I know you got tea — don't be afraid to spill!"
+        } else {
+            colors = true
+        }
+
+        var scheme = document.createElement("div")
+
+        // If color scheme was generated also write to chat.
+        if (colors) {
+
+            palette = popRandomElement(palettes)
+
+            var scheme = document.createElement("div")
+            scheme.classList.add('message')
+            scheme.classList.add('from')
+
+            scheme.innerHTML = `<button class='play' onclick='input(${JSON.stringify(palette.colors)})'>▶︎</button>`
+            palette.colors.forEach(color => {
+                scheme.innerHTML += `<span class='circle' style='background-color: ${color}'></span>`
+            });
+
+            var response1 = popRandomElement(responses1)
+            var response2 = popRandomElement(responses2)
+
+            response.innerHTML = response1 + " " + response2.replace("$$$", `<b>${palette.name}</b>`)
+        }
+
+        // Add response and color scheme to response
+        chat.appendChild(response)
+        chat.appendChild(scheme)
+        // Remove message from input
+        text.value = ""
+        // Unselect input to close keyboard
+        text.blur()
+        // Scroll chat to latest message
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    document.getElementById('text').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            message()
+        }
+    });
+
+    function popRandomElement(arr) {
+        // Generate a random index within the array's bounds
+        const randomIndex = Math.floor(Math.random() * arr.length);
+        // Use splice() to remove and return the element at the random index
+        // splice(startIndex, deleteCount) returns an array containing the removed elements
+        const removedElement = arr.splice(randomIndex, 1)[0]; 
+        return removedElement;
+    }
+
+    palettes = [
+        {"name": "Chaotic Good Vibes", "colors": ["#ff5c8a", "#ffb22e", "#39e75f", "#3c91ff"]},
+        {"name": "Corporate Girlie Gets A Raise", "colors": ["#ff4d6d", "#ffb4a2", "#b5179e"]},
+        {"name": "Goblin Mode Activated", "colors": ["#ff00a0", "#ff8900", "#00ffa6"]},
+        {"name": "Yassified Excel", "colors": ["#ff2e63", "#08d9d6", "#252a34"]},
+        {"name": "Pastel Menace", "colors": ["#ff77e9", "#ffa8e2", "#ffd6f6"]},
+        {"name": "AI But With Glitter", "colors": ["#ff3cac", "#562bff", "#00d4ff"]},
+        {"name": "Emoji Overload", "colors": ["#ff1f1f", "#ffe81f", "#00d41f", "#1fd6ff"]},
+        {"name": "Certified Chaotic Neutral", "colors": ["#ff5f45", "#ffbd39", "#50ff9e", "#59aaff"]},
+        {"name": "The Main Character", "colors": ["#ff4d00", "#ff9100", "#ffe500"]},
+        {"name": "Girl Math", "colors": ["#ffaf00", "#ff5e00", "#ff1e00"]},
+        {"name": "Rat Girl Summer", "colors": ["#ff2e2e", "#ff7a00", "#00ffa2"]},
+        {"name": "Insurance But Fun", "colors": ["#fe6d73", "#f7b32b", "#28c2ff"]},
+        {"name": "Overcaffeinated", "colors": ["#ff006c", "#ff5f00", "#ffbd00"]},
+        {"name": "No Thoughts Just Vibes", "colors": ["#ffcf56", "#ff6c37", "#36c9c6"]},
+        {"name": "Dramatic Pause", "colors": ["#ff1744", "#ff8a00", "#ffe100"]},
+        {"name": "Goblincore", "colors": ["#ff0090", "#ff9100", "#00f7a3"]},
+        {"name": "Girlboss Aura", "colors": ["#ff78f0", "#ffb3fe", "#c47fff"]},
+        {"name": "Brain Rot", "colors": ["#ff3366", "#ff9933", "#33ffff"]},
+        {"name": "More Pink Please", "colors": ["#ff5da2", "#ff85b7", "#ffb8d1"]},
+        {"name": "Beige Flag Energy", "colors": ["#ff6b6b", "#f7ce68", "#4ecdc4"]},
+        {"name": "Girl Dinner", "colors": ["#ff80b5", "#ffa8c7", "#ffd1da"]},
+        {"name": "Big Spreadsheet Energy", "colors": ["#ff4a4a", "#ffc93c", "#5cf28a"]},
+        {"name": "Only One Braincell", "colors": ["#ff3ca6", "#ff9e1b", "#fff75e"]},
+        {"name": "Vendor Drama", "colors": ["#ff007a", "#ff4500", "#ffd000"]},
+        {"name": "Pink Tax Evasion", "colors": ["#ff3b8d", "#ff77b7", "#ffa3cf"]},
+        {"name": "Betty White Noise", "colors": ["#ff69b4", "#ffd700", "#87cefa"]},
+        {"name": "AI Couture", "colors": ["#ff007b", "#ffa600", "#00ffc8"]},
+        {"name": "Totally Unsupervised", "colors": ["#ff5a5f", "#ffa500", "#39ff14"]},
+        {"name": "Quiet Quitting", "colors": ["#ff199e", "#ff8d1e", "#ffee32"]},
+        {"name": "Hot Takes Only", "colors": ["#ff0054", "#ff8a00", "#ffea00"]},
+        {"name": "Self Insured", "colors": ["#ff004f", "#ff8a00", "#ffe100"]},
+        {"name": "Claim Denied Babe", "colors": ["#ff4f81", "#ff9671", "#ffc75f"]},
+        {"name": "Little Miss Algorithm", "colors": ["#ff69b4", "#ffd700", "#98ff98"]},
+        {"name": "No Chill", "colors": ["#ff2e63", "#08d9d6", "#252a34"]},
+        {"name": "Drama Queen", "colors": ["#ff006e", "#fb5607", "#ffbe0b", "#9b5de5"]},
+        {"name": "Delulu", "colors": ["#ff006e", "#ff85a1", "#ffbd00", "#00bbf9"]},
+        {"name": "Snack Time", "colors": ["#ff4f00", "#ffb20f", "#f9c80e"]},
+        {"name": "Work Life Balance", "colors": ["#ff00c8", "#ff6bd6", "#ffe8ff"]},
+        {"name": "Feral And Fabulous", "colors": ["#ff1b1c", "#d00000", "#ffba08"]},
+        {"name": "Goblin Mode Activated", "colors": ["#ff7f11", "#ff1b1c", "#ffbd00"]},
+        {"name": "Frenemies Forever", "colors": ["#ff99c8", "#d0aaff", "#b28dff"]},
+        {"name": "No Filter", "colors": ["#ff0054", "#ff5400", "#ffbd00", "#00bbf9"]},
+        {"name": "No Thoughts", "colors": ["#ff9f1c", "#ffbf69", "#ff595e"]},
+        {"name": "Bold And Baffling", "colors": ["#f72585", "#b5179e", "#560bad", "#480ca8"]},
+        {"name": "Autumn Glow","colors": ["#780116", "#f7b538", "#db7c26", "#d8572a", "#c32f27"]},
+        {"name": "Ocean Sunset","colors": ["#355070", "#6d597a", "#b56576", "#e56b6f", "#eaac8b"]},
+        {"name": "Yas Queen, Slay", "colors": ["#ff0000", "#ff5800", "#ffff00", "#00ff00", "#0000ff", "#4b0082", "#ee82ee"]},
+        {"name": "Amber Skyline","colors": ["#ffb703", "#fb8500", "#f3722c"]},
+        {"name": "Berry Crush","colors": ["#6a0136", "#bf1a2f", "#e5383b"]},
+        {"name": "Midnight Frost","colors": ["#0d1b2a", "#1b263b", "#415a77", "#778da9"]},
+        {"name": "Electric Sorbet","colors": ["#ff9ff3", "#feca57", "#ff6b6b", "#48dbfb"]},
+        {"name": "Forest Canopy","colors": ["#2a6041", "#3a7d44", "#88a47c"]},
+        {"name": "Coral Reef","colors": ["#ff6f59", "#f7cb15", "#3a86ff", "#06d6a0"]},
+        {"name": "Moonstone Drift","colors": ["#ced4da", "#adb5bd", "#6c757d"]},
+        {"name": "Sakura Daydream","colors": ["#ffe3e3", "#ffb5c2", "#ff7b89", "#d9539d"]},
+        {"name": "Spiced Chai","colors": ["#b08968", "#ddb892", "#ede0d4", "#7f5539"]},
+        {"name": "Emerald Tide","colors": ["#0a9396", "#94d2bd", "#e9d8a6"]},
+        {"name": "Cotton Candy Rush","colors": ["#ffafcc", "#ffc8dd", "#bde0fe", "#a2d2ff"]},
+        {"name": "Neon Lotus","colors": ["#ff006e", "#fb5607", "#ffbe0b", "#3a86ff"]},
+        {"name": "Deep Cavern","colors": ["#1b1b1e", "#373f51", "#6c757d"]},
+        {"name": "Lavender Haze","colors": ["#cdb4db", "#ffc8dd", "#ffafcc", "#bde0fe"]},
+        {"name": "Cinder Smoke","colors": ["#2b2d42", "#8d99ae", "#edf2f4"]},
+        {"name": "Summer Orchard","colors": ["#ff9e00", "#ff5400", "#dd2c00"]},
+        {"name": "Arctic Dawn","colors": ["#e0fbfc", "#98c1d9", "#3d5a80", "#293241"]},
+        {"name": "Plum Velvet","colors": ["#4d194d", "#7251b5", "#a06cd5"]},
+        {"name": "Mint Macaron","colors": ["#cdf0ea", "#a2d2bf", "#5eaaa8"]},
+        {"name": "Saffron Ember","colors": ["#f4a261", "#e76f51", "#e63946"]},
+        {"name": "Cloudberry Mist","colors": ["#f7edf0", "#f0d9ff", "#cbb2fe"]},
+        {"name": "Golden Poppy","colors": ["#ffca3a", "#ffb703", "#fb8500"]},
+        {"name": "Tidal Surge","colors": ["#03045e", "#0077b6", "#00b4d8", "#90e0ef"]},
+        {"name": "French Garden","colors": ["#9c6644", "#ddb892", "#b08968", "#7f5539"]},
+        {"name": "Blueberry Noir","colors": ["#10002b", "#240046", "#3c096c", "#5a189a"]},
+        {"name": "Glass Horizon","colors": ["#e0efeb", "#b4d4c4", "#8abaae"]},
+        {"name": "Solar Spice","colors": ["#ea7317", "#cc5803", "#a23e48"]},
+        {"name": "Peach Picnic","colors": ["#ffb5a7", "#fcd5ce", "#f8edeb"]},
+        {"name": "Iron Garden","colors": ["#606c38", "#283618", "#fefae0"]},
+        {"name": "Polar Twilight","colors": ["#3a0ca3", "#7209b7", "#f72585"]},
+        {"name": "Cocoa Dream","colors": ["#4a2c2a", "#7b3e19", "#a47148", "#d4a276"]},
+        {"name": "Cyan Pulse","colors": ["#00a6fb", "#0582ca", "#006494"]},
+        {"name": "Ruby Candy","colors": ["#d81159", "#8f2d56", "#218380"]},
+        {"name": "Iris Meadow","colors": ["#e9d5ca", "#cebbc9", "#a6a3b6"]},
+        {"name": "Rosewood Lane","colors": ["#990d35", "#a31621", "#bf4342"]},
+        {"name": "Shadow Orchid","colors": ["#301934", "#4b306a", "#6c4b8c"]},
+        {"name": "Honey Apple","colors": ["#ffd166", "#e63946", "#fcbf49"]},
+        {"name": "Steel Mirage","colors": ["#1f2421", "#4b5d67", "#b9c6ae"]},
+        {"name": "Tanzanite Glow","colors": ["#4f0e9e", "#7242c8", "#b28dff"]},
+        {"name": "Sunlit Lavender","colors": ["#f7e1ff", "#dfb2f4", "#b28dff"]},
+        {"name": "Pine Needle","colors": ["#2d6a4f", "#52b788", "#95d5b2"]},
+        {"name": "Lime Spark","colors": ["#d9ed92", "#b5e48c", "#76c893"]},
+        {"name": "Rustic Trail","colors": ["#9a031e", "#fb8b24", "#5f0f40"]},
+        {"name": "Cotton Twilight","colors": ["#f4f1de", "#e07a5f", "#3d405b"]},
+        {"name": "Crescent Shore","colors": ["#023e8a", "#0096c7", "#48cae4"]},
+        {"name": "Fire Blossom","colors": ["#ff4800", "#ff5400", "#ff6d00"]},
+        {"name": "Willow Breeze","colors": ["#d8e2dc", "#ffe5d9", "#ffd7ba"]},
+        {"name": "Nightshade Plum","colors": ["#3c0f39", "#622f70", "#ab47bc"]},
+        {"name": "Golden Stone","colors": ["#f7b267", "#f4845f", "#f25c54"]},
+        {"name": "Bamboo Echo","colors": ["#6b705c", "#a5a58d", "#b7b7a4"]},
+        {"name": "Dragonfruit Candy","colors": ["#ff006e", "#fb57b6", "#ff85d1"]},
+        {"name": "Moon Petals","colors": ["#f0efeb", "#dfd3c3", "#c7b198"]},
+        {"name": "Mint Thunder","colors": ["#55a630", "#80b918", "#aacc00"]},
+        {"name": "Amber Vellum","colors": ["#e9c46a", "#f4a261", "#2a9d8f"]},
+        {"name": "Indigo Frost","colors": ["#1c2541", "#3a506b", "#5bc0be"]},
+        {"name": "Crimson Punch","colors": ["#ba181b", "#e5383b", "#b1a7a6"]},
+        {"name": "Retro Arcade","colors": ["#ff2079", "#00ffff", "#00ff66"]},
+        {"name": "Pastel Breeze","colors": ["#caf0f8", "#ade8f4", "#90e0ef"]},
+        {"name": "Honey Orchid","colors": ["#ffda77", "#f4acb7", "#9d8189"]},
+        {"name": "Rainforest Echo","colors": ["#1b4332", "#2d6a4f", "#40916c"]},
+        {"name": "Cinder Tea","colors": ["#56494e", "#8d7f82", "#d0ccd0"]},
+        {"name": "Saffron Milk","colors": ["#fee440", "#f15bb5", "#9b5de5"]},
+        {"name": "Glacier Mist","colors": ["#ddecf5", "#9ec9e2", "#4b86b4"]},
+        {"name": "Velvet Cedar","colors": ["#432818", "#6f1d1b", "#a4161a"]},
+        {"name": "Digital Pulse","colors": ["#d000ff", "#7000ff", "#1900ff"]},
+        {"name": "Mulberry Rue","colors": ["#4b244a", "#6a3e8e", "#b36ec3"]},
+        {"name": "Lemonberry Ice","colors": ["#ffd500", "#ff67e7", "#8c82fc"]},
+        {"name": "Hushed Forest","colors": ["#354f52", "#52796f", "#84a98c"]},
+        {"name": "Satellite Dawn","colors": ["#efd3d7", "#dec0f1", "#b79ced"]},
+        {"name": "Marine Lantern","colors": ["#023047", "#219ebc", "#8ecae6"]},
+        {"name": "Velvet Fire","colors": ["#a100f2", "#ff4ecd"]},
+        {"name": "Opal Mirage","colors": ["#dfe7fd", "#c1d3fe", "#abc4ff"]},
+        {"name": "Tangerine Soda","colors": ["#ff7f11", "#ffb627", "#f6f740"]},
+        {"name": "Jade Shell","colors": ["#006d77", "#83c5be", "#edf6f9"]},
+        {"name": "Magenta Drift","colors": ["#ff006e", "#ff3f93", "#ff79c6"]},
+        {"name": "Olive Ember","colors": ["#3a5a40", "#588157", "#dad7cd"]},
+        {"name": "Berry Orchid","colors": ["#800f2f", "#c9184a", "#ff4d6d"]},
+        {"name": "Snow Lantern","colors": ["#f8edeb", "#fcd5ce", "#f9dcc4"]},
+        {"name": "Desert Bloom","colors": ["#bb9457", "#d6c69f", "#ead7c0"]},
+        {"name": "Aquatic Pulse","colors": ["#007f5f", "#2b9348", "#55a630"]},
+        {"name": "Violet Vibe","colors": ["#7b2cbf", "#9d4edd", "#c77dff"]},
+        {"name": "Rust Lantern","colors": ["#7f5539", "#9c6644", "#b08968"]},
+        {"name": "Candy Voltage","colors": ["#ff5f9e", "#ff99c8", "#fcf6bd"]},
+        {"name": "Meadow Dust","colors": ["#d6ccc2", "#e3d5ca", "#f5ebe0"]},
+        {"name": "Aurora Phase","colors": ["#8ecae6", "#219ebc", "#126782"]},
+        {"name": "Cerulean Sand","colors": ["#003049", "#d62828", "#fcbf49"]},
+        {"name": "Lilac Boulevard","colors": ["#e9d5ff", "#c8b6ff", "#b8c0ff"]},
+        {"name": "Paprika Smoke","colors": ["#780000", "#c1121f", "#fdf0d5"]},
+        {"name": "Rose Icicle","colors": ["#ffe5ec", "#ffc2d1", "#ffb3c6"]},
+        {"name": "Icy Ember","colors": ["#e71d36", "#2ec4b6", "#eae2b7"]},
+        {"name": "Coral Dusk","colors": ["#ee6055", "#60d394", "#aaf683"]},
+        {"name": "Marigold Garden","colors": ["#ffd60a", "#ffea00", "#ffc300"]}
+    ]
+
+    responses2 = [
+        "Buckle up, this palette is cruising in with the name $$$.",
+        "Guess what? Your next fave palette is totally $$$.",
+        "I cooked up something cute for you — it's called $$$.",
+        "Warning: this palette named $$$ may cause uncontrollable joy.",
+        "Big news: the palette gods have spoken, and they said $$$.",
+        "Okayyy, meet your new bestie of colors: $$$.",
+        "Slide into this vibe shift — the palette is $$$.",
+        "Soft launch: this palette goes by $$$.",
+        "Hard launch: this palette is officially $$$.",
+        "Alright legend, this palette insists on being called $$$.",
+        "Your regularly scheduled palette drop: $$$.",
+        "This palette walked in and said call me $$$.",
+        "Spicy little palette moment coming in hot: $$$.",
+        "Breaking: local color palette stuns with name $$$.",
+        "This palette woke up and chose the name $$$.",
+        "Guess who's back with another palette? It's $$$.",
+        "New palette just dropped — and yes, it's named $$$.",
+        "Vibes detected. Palette identified. Name: $$$.",
+        "If palettes had fan clubs, $$$ would be president.",
+        "This palette is basically screaming I'm $$$.",
+        "Please enjoy this palette while I pretend I didn't spend hours naming it $$$.",
+        "Caught a palette in the wild — it answered to $$$.",
+        "Your vibe today? Definitely matching the palette $$$.",
+        "This palette is giving main character energy — $$$.",
+        "Incoming palette energy blast: $$$.",
+        "Behold, the palette that simply *had* to be called $$$.",
+        "I'm obsessed. This palette is called $$$ and it knows it.",
+        "A palette this good needs a name like $$$.",
+        "I present to you: the palette known as $$$.",
+        "Here comes the color chaos — politely named $$$.",
+        "This palette said put some respect on my name: $$$.",
+        "Major palette alert: $$$ has entered the chat.",
+        "Oh this? Just a palette casually named $$$.",
+        "Your aesthetic upgrade arrives courtesy of $$$.",
+        "Meet $$$, the palette that refuses to be subtle.",
+        "Just dropping $$$ here like it's no big deal.",
+        "Don't panic, but this palette is officially $$$.",
+        "Color excellence achieved — codename $$$.",
+        "The prophecy foretold a palette named $$$, and here it is.",
+        "This palette didn't choose greatness — greatness chose $$$.",
+        "Here lies a palette with one mission: be $$$.",
+        "A lil palette snack for you — it's $$$.",
+        "PSA: The palette known as $$$ is now live.",
+        "Let's welcome $$$ to your color lineup.",
+        "Allow me to introduce this diva of a palette: $$$.",
+        "Hope you're ready, because this palette is calling itself $$$.",
+        "Weird flex, but this palette named $$$ is kinda iconic.",
+        "Certified fresh palette incoming — $$$.",
+        "Your daily dose of color chaos: $$$.",
+        "Here's a palette that came to SLAY — name: $$$.",
+        "This palette is basically a hype squad named $$$.",
+        "Not to be dramatic, but this palette called $$$ changed everything.",
+        "Lean in… this palette whispers its name is $$$.",
+        "This palette is peak personality — $$$.",
+        "I found this palette vibing quietly in a corner — name: $$$.",
+        "Major slay alert: palette $$$ just dropped.",
+        "This palette said new phone, who dis? — it's $$$.",
+        "Small palette, big energy — its name: $$$.",
+        "This palette is here to upgrade your whole mood — $$$.",
+        "If confidence were a palette, it'd be $$$.",
+        "This palette is basically doing a runway walk — $$$.",
+        "Just a casual palette flex — meet $$$.",
+        "Vibe check: this palette passes. It's $$$.",
+        "I raise you one palette, elegantly named $$$.",
+        "This palette is practically glowing — it goes by $$$.",
+        "Friendly reminder that this palette is called $$$.",
+        "Plot twist: the palette's name is actually $$$.",
+        "You didn't ask (yet), but here's a palette named $$$.",
+        "Say hi to $$$, a palette with zero chill.",
+        "Your color journey continues with the palette $$$.",
+        "Real talk: this palette insisted on being $$$.",
+        "Idk who needs to hear this but the palette is $$$.",
+        "Okay, palette reveal time — its name is $$$.",
+        "This palette is 90% vibes, 10% the name $$$.",
+        "Tiny announcement: this palette is officially $$$.",
+        "This palette has entered its slay era — $$$.",
+        "Incoming: a palette with immaculate energy — $$$.",
+        "Consider this palette your new personality — $$$.",
+        "Fun fact: this palette is legally named $$$.",
+        "This palette is basically a warm hug called $$$.",
+        "Here's a palette that understood the assignment — $$$.",
+        "Meet $$$, the palette that's doing the most.",
+        "This palette is out here living its best life — $$$.",
+        "Hot take: this palette named $$$ is elite.",
+        "Breaking news: palette $$$ has achieved legendary status.",
+        "This palette is giving ✨vibrancy✨ — call it $$$.",
+        "Beep boop. Palette name confirmed: $$$.",
+        "This palette rolled up and told me its name is $$$.",
+        "I bring you colors and chaos — palette $$$.",
+        "This palette is basically a color party named $$$.",
+        "Meet $$$, the palette that refuses to calm down.",
+        "Oh look, a palette with the audacity to call itself $$$.",
+        "This palette has one vibe and it's $$$.",
+        "Feeling bold? This palette is too — $$$.",
+        "Here comes $$$, ready to brighten your whole day.",
+        "This palette just winked at me — name's $$$.",
+        "Certified cuteness detected: palette $$$.",
+        "Last but not least, here's the palette formally known as $$$."
+        ]
+
+    responses1 = [
+        "Omg besty - that's such a good idea!",
+        "Ugh, you're so creative - keep up the good work!",
+        "Omg bestie — you absolutely nailed it!",
+        "You. Are. Crushing. It. Keep the energy going!",
+        "That idea is genius — seriously, well done!",
+        "You're on fire today — everything you touch turns amazing!",
+        "Love this for you — your creativity is unmatched!",
+        "You did that — and you did it flawlessly!",
+        "You're unstoppable — nothing can dim your shine!",
+        "Big brain moment — you're so creative!",
+        "Wow, just wow — you're truly leveling up!",
+        "That was a power move — pure brilliance!",
+        "You understood the assignment — and delivered flawlessly!",
+        "Your vibe is immaculate — keep shining!",
+        "You came up with that so fast — your mind is magic!",
+        "Major slay — you really outdid yourself!",
+        "You're leveling up — and it shows!",
+        "That's a stellar idea — you're on a roll!",
+        "Peak excellence — you're truly in your element!",
+        "Your brilliance is blinding — everyone around you is lucky to witness it!",
+        "You're radiating excellence — the world can barely keep up with you!",
+        "That idea is next-level iconic — you're truly unstoppable!",
+        "Your creativity is overflowing — it's like watching pure magic happen!",
+        "Every move you make is a masterclass — honestly, teach us your ways!",
+        "You're a powerhouse of positivity — your energy lights up everything!",
+        "You're a walking burst of inspiration — people thrive just being near you!",
+        "Your success is inevitable — you're on a cosmic winning streak!",
+        "The intelligence might be artificial - but the colors are real!",
+        "If ChatGPT is worth $1 trillion - then SweaterGPT must be worth a free drink!",
+        "Your brilliance is blinding — everyone around you is lucky to witness it!",
+        "You're radiating excellence — the world can barely keep up with you!",
+        "That idea is next-level iconic — you're truly unstoppable!",
+        "Your creativity is overflowing — it's like watching pure magic happen!",
+        "You're soaring so high — nothing in the universe can dim your glow!",
+        "Every move you make is a masterclass — honestly, teach us your ways!",
+        "You're a powerhouse of positivity — your energy lights up everything!",
+        "This is legendary behavior — you're rewriting the definition of amazing!",
+        "You're a walking burst of inspiration — people thrive just being near you!",
+        "Your success is inevitable — you're on a cosmic winning streak!",
+        "You're absolutely crushing it — the sky is not your limit!",
+        "Your energy is contagious — everyone wants a piece of it!",
+        "That was pure genius — you've got the Midas touch!",
+        "You're shining so bright — the stars are jealous of you!",
+        "Your mind is a goldmine — everything you touch turns to brilliance!",
+        "You're unstoppable — nothing can stand in your way!",
+        "Your ideas are revolutionary — keep changing the game!",
+        "You're an inspiration — everyone should take notes!",
+        "Your vibe is unmatched — the world can't get enough!",
+        "You're a force of nature — pure magic in human form!",
+        "That was iconic — you just set the standard!",
+        "You're overflowing with talent — it's like you were born for this!",
+        "Your creativity knows no bounds — it's awe-inspiring!",
+        "You're leveling up nonstop — nothing can slow you down!",
+        "Your energy is unmatched — you light up every room!",
+        "That move was brilliant — teach us your ways!",
+        "You're a superstar — keep shining brightly!",
+        "Your ideas are gold — you're seriously on fire!",
+        "You're thriving — your momentum is unstoppable!",
+        "That was legendary — you just raised the bar!",
+        "You're pure brilliance — never forget it!",
+        "Your mind is unstoppable — everything you imagine comes true!",
+        "You're shining brighter than ever — the world sees you!",
+        "That was next-level — you're rewriting the rulebook!",
+        "You're a creative genius — and everyone can see it!",
+        "Your energy is electric — it sparks joy everywhere!",
+        "You're a trailblazer — nothing can hold you back!",
+        "That idea is pure magic — you're unstoppable!",
+        "You're thriving beyond measure — the universe is cheering!",
+        "Your brilliance is unmatched — keep showing up like this!",
+        "You're a powerhouse — unstoppable and brilliant!",
+        "That was extraordinary — you just wowed everyone!",
+        "You're radiant — your energy is infectious!",
+        "Your creativity is awe-inspiring — keep dazzling the world!",
+        "You're unstoppable — nothing can stop your shine!",
+        "That was genius — you're changing the game!",
+        "You're a beacon of excellence — everyone notices!",
+        "Your ideas are extraordinary — keep them coming!",
+        "You're thriving — and it shows in everything you do!",
+        "That move was legendary — you just redefined success!",
+        "You're dazzling — everyone is watching your glow!",
+        "Your brilliance is off the charts — you're incredible!",
+        "You're unstoppable — pure energy and brilliance!",
+        "That was magnificent — the world is in awe!",
+        "You're a creative powerhouse — the universe loves your vibe!",
+        "Your talent is extraordinary — never doubt yourself!",
+        "You're radiant — your light touches everyone around you!",
+        "That was incredible — you're rewriting what's possible!",
+        "You're thriving — your impact is undeniable!",
+        "Your energy is unstoppable — pure brilliance in motion!",
+        "You're iconic — keep showing the world how it's done!",
+        "That was masterful — your skill is unmatched!",
+        "You're dazzling — your brilliance inspires everyone!",
+        "Your creativity is limitless — nothing can contain it!",
+        "You're unstoppable — keep taking the world by storm!",
+        "That idea is legendary — you're a visionary!",
+        "You're thriving — your energy is electric!",
+        "Your brilliance is radiant — the world can't get enough!",
+        "You're a shining star — pure excellence everywhere!",
+        "That was spectacular — you just set the standard!",
+        "You're unstoppable — nothing can dim your light!",
+        "Your creativity is pure magic — everyone notices!",
+        "You're a trailblazer — keep leading the way!",
+        "That was extraordinary — you just raised the bar!",
+        "You're thriving — and it's absolutely inspiring!",
+        "Your energy is magnificent — it lights up the world!",
+        "You're unstoppable — pure power and brilliance!",
+        "That was iconic — you've redefined success!",
+        "You're a genius — keep dazzling everyone!",
+        "Your creativity is limitless — nothing can hold you back!",
+        "You're thriving — your brilliance is contagious!",
+        "That was remarkable — you just wowed everyone!",
+        "You're radiant — everyone is inspired by you!",
+        "Your talent is extraordinary — the world notices!",
+        "You're unstoppable — keep shining like this!",
+        "That was brilliant — you're changing the game!",
+        "You're iconic — your energy is electric!",
+        "Your creativity is awe-inspiring — the universe cheers!",
+        "You're thriving — your momentum is unstoppable!",
+        "That was legendary — pure brilliance!",
+        "You're dazzling — your light inspires everyone!",
+        "Your energy is unmatched — keep it flowing!",
+        "You're unstoppable — pure excellence in motion!",
+        "That was extraordinary — you just set a new standard!",
+        "You're a superstar — keep shining brightly!",
+        "Your creativity is overflowing — everyone notices!",
+        "You're thriving — nothing can slow you down!",
+        "That was magnificent — the world sees your brilliance!",
+        "You're radiant — your talent is extraordinary!",
+        "Your energy is electric — pure inspiration everywhere!",
+        "You're unstoppable — keep thriving like this!",
+        "That was legendary — you just blew everyone away!",
+        "You're a powerhouse — your brilliance knows no bounds!",
+        "Your creativity is iconic — keep dazzling the world!",
+        "You're thriving — your brilliance inspires everyone!"
+        ]
+
+    // When the keyboard opens the viewport dimensions change.
+    // When this happens, shrink the chat height to keep it on screen.
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => {
+            document.getElementById('chat').style.height = (window.visualViewport.height - 160) + 'px';
+            // Whenever this happens also...
+            //
+            // 1. Scroll window to top
+            window.scrollTo(0, 0);
+            // 2. Scroll chat to bottom to show latest message
+            chat = document.getElementById('chat')
+            chat.scrollTop = chat.scrollHeight;
+        });
+    }
+
+    // Send input to sweater.
+    // When user presses color scheme play button, send colors to sweater to be displayed.
+    function input(colors) {
         var xhr = new XMLHttpRequest();
         xhr.open("POST", 'input');
         xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        xhr.send("state="+state);
+        c = 0
+        payload = ""
+        colors.forEach(color => {
+            c += 1
+            payload += `${c}=${color}&`
+        });
+        xhr.send(payload);
     }
 </script>
 )";
+
+uint16_t myChase() {
+  WS2812FX::Segment* seg = ws2812fx.getSegment();
+  WS2812FX::Segment_runtime* segrt = ws2812fx.getSegmentRuntime();
+  int seglen = seg->stop - seg->start + 1;
+  
+//  int numColors = sizeof(colors) / sizeof(colors[0]);
+  int numColors = 0;
+  for (int i=0; i < 10; i++) {
+    if (colors[i] != 0) {
+      numColors++;
+    }
+  }
+
+  for(uint16_t i=0; i < seglen; i++) {
+    int colorIndex = (segrt->counter_mode_call + i) % numColors;
+    ws2812fx.setPixelColor(seg->stop - i, colors[colorIndex]);
+  }
+
+  return seg->speed;
+}
 
 void setup() {
   // Initialize serial
@@ -124,61 +701,35 @@ void setup() {
   });
 
   server.on("/input", [](){
-    String state = server.arg("state");
+    
+    String data = server.arg("colors");
+    String color;
 
-    if (state == "red") {
-      ws2812fx.setMode(FX_MODE_STATIC);
-      ws2812fx.setColor(255, 0, 0);
+    for (uint8_t i = 0; i < 10; i++) {
+
+      if ( i < server.args() ) {
+        color = server.arg(i);
+      } else {
+        color = "#";
+      }
+      Serial.println( color );
+      colors[i] = strtol(color.substring(1).c_str(), NULL, 16);
     }
-    else if (state == "orange") {
-      ws2812fx.setMode(FX_MODE_STATIC);
-      ws2812fx.setColor(255, 165, 0);
-    }
-    else if (state == "yellow") {
-      ws2812fx.setMode(FX_MODE_STATIC);
-      ws2812fx.setColor(255, 255, 0);
-    }
-    else if (state == "green") {
-      ws2812fx.setMode(FX_MODE_STATIC);
-      ws2812fx.setColor(0, 255, 0);
-    }
-    else if (state == "blue") {
-      ws2812fx.setMode(FX_MODE_STATIC);
-      ws2812fx.setColor(0, 0, 255);
-    }
-    else if (state == "indigo") {
-      ws2812fx.setMode(FX_MODE_STATIC);
-      ws2812fx.setColor(75, 0, 130);
-    }
-    else if (state == "violet") {
-      ws2812fx.setMode(FX_MODE_STATIC);
-      ws2812fx.setColor(127, 0, 255);
-    }
-    else if (state == "white" ){
-      ws2812fx.setMode(FX_MODE_STATIC);
-      ws2812fx.setColor(255, 255, 255);
-    }
-    else if (state == "rainbow") {
-      ws2812fx.setMode(FX_MODE_RAINBOW_CYCLE);
-    }
-    else if (state == "candle") {
-      ws2812fx.setColor(255,140,0);
-      ws2812fx.setMode(FX_MODE_FIRE_FLICKER);
-    }
-    else if (state == "sparkle") {
-      ws2812fx.setColor(255, 255, 0);
-      ws2812fx.setMode(FX_MODE_HYPER_SPARKLE);
-    }
-    else if (state == "christmas") {
-      ws2812fx.setColor(255, 255, 0);
-      ws2812fx.setMode(FX_MODE_MERRY_CHRISTMAS);
-    }
-    else if (state == "random") {
-      ws2812fx.setColor(255, 255, 0);
-      ws2812fx.setMode(FX_MODE_RUNNING_RANDOM);
-    }
- 
-    server.send(200, "text/html", "Success! Set state to " + state + ".");
+
+//    Serial.println("\n");
+//    for (int x = 0; x < 10; x++) {
+//       Serial.println(colors[x]);
+//    }
+
+//    uint32_t c1 = strtol(color1.substring(1).c_str(), NULL, 16);
+//    uint32_t c2 = strtol(color2.substring(1).c_str(), NULL, 16);
+//    uint32_t c3 = strtol(color3.substring(1).c_str(), NULL, 16);
+//    uint32_t colors[] = { c1, c2, c3 };
+
+    ws2812fx.setCustomMode(myChase);
+    ws2812fx.setSegment(0, 0, LED_COUNT - 1, FX_MODE_CUSTOM, RED, 200);
+
+//    ws2812fx.setSegment(0, 0, 50, FX_MODE_TWINKLE, colors, 2500);
   });
 
   // Start servers
